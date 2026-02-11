@@ -17,7 +17,7 @@ const OtpScreen = () => {
     const dispatch = useDispatch<AppDispatch>();
     const navigation = useNavigation<any>();
     const route = useRoute<any>();
-    const { phone } = route.params || {};
+    const { phone, role_id } = route.params || {};
     const { loading } = useSelector((state: RootState) => state.auth);
 
     const handleChange = (text: string, index: number) => {
@@ -49,61 +49,18 @@ const OtpScreen = () => {
         }
 
         try {
-            const resultAction = await dispatch(verifyOtp({ phone: phone, otp: otpCode }));
+            const resultAction = await dispatch(verifyOtp({ phone_number: phone, otp: otpCode, role_id }));
             const result = resultAction.payload as any;
 
             if (verifyOtp.fulfilled.match(resultAction)) {
-                // Check for both boolean true or string 'true' to be safe, assuming similar API structure
-                if (result.status === true || result.status === 'true') {
-
-                    if (result.token) {
-                        try {
-                            await AsyncStorage.setItem('user_token', result.token);
-                            // Fetch user profile immediately after login
-                            const profileAction = await dispatch(viewProfile());
-
-                            console.log("Profile Action ==========>", profileAction)
-
-                            if (viewProfile.fulfilled.match(profileAction)) {
-                                const payload = profileAction.payload as any;
-                                // Check if profile data contains extra object (implies registered)
-                                if ((payload.status === true || payload.success === 'true' || payload.success === true) && payload.extraData) {
-                                    console.log('Profile loaded successfully with extraData');
-                                    dispatch(setAuthenticated(true));
-                                    navigation.reset({
-                                        index: 0,
-                                        routes: [{ name: 'Tab' }],
-                                    });
-                                } else {
-                                    // Profile fetch logic failed (e.g. user not found or validation errors)
-                                    console.log('Profile fetch failed, redirecting to Register', payload);
-                                    navigation.navigate('Register', { phone, missingFields: payload.extraData });
-                                }
-                            } else {
-                                // Profile fetch rejected (network or server error)
-                                console.log('Profile fetch rejected (likely API error), redirecting to Register');
-                                navigation.navigate('Register', { phone });
-                            }
-                        } catch (e) {
-                            console.error("Failed to save token or fetch profile", e);
-                            navigation.navigate('Register', { phone });
-                        }
-                    }
-
-                    // Need to update auth state? AuthSlice handles state update on fulfilled.
-                    // Assuming 'Home' is the authenticated screen or Main Stack
-                    // Resetting navigation stack might be better but navigate is fine for now
-                    // Check where we should navigate. Usually App or Home.
-                    // The user previously mentioned "Home".
-                    // For now I will navigate to 'App' or whatever the main stack is called, or leave it to state listener.
-                    // BUT, simplistic approach:
-                    // The authSlice sets isAuthenticated = true.
-                    // If there is an Application wrapper checking isAuthenticated, it might auto-navigate.
-                    // If not, we manually navigate.
-                    // I'll assume we need to navigate to 'Main' or 'Home'.
-                    // Let's check navigation structure in a moment?
-                    // For now, I'll log success.
-                    console.log('OTP Verified:', result);
+                if (result.success === true || result.success === 'true') {
+                    console.log('OTP Verified, User Data:', result.data);
+                    // Navigation should ideally be handled by the MainNavigation observing 'isAuthenticated'
+                    // specific for this app flow:
+                    navigation.reset({
+                        index: 0,
+                        routes: [{ name: 'Tab' }],
+                    });
                 } else {
                     Alert.alert('Verification Failed', result.message || result.extraData || 'Invalid OTP');
                 }

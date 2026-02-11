@@ -22,6 +22,7 @@ import { scale } from 'react-native-size-matters';
 import { COLORS } from '../../constants/color';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import CustomDropdown from '../../components/CustomDropdown';
+import { roleOptions } from '../../constants/data';
 
 const LoginScreen = () => {
     const [phone, setPhone] = useState('');
@@ -32,10 +33,7 @@ const LoginScreen = () => {
     const dispatch = useDispatch<AppDispatch>();
     const { loading } = useSelector((state: RootState) => state.auth);
 
-    const roleOptions = [
-        { label: 'Picker', value: 'picker' },
-        { label: 'Packer', value: 'packer' },
-    ];
+
 
     const handleSendOtp = async () => {
         let valid = true;
@@ -51,13 +49,17 @@ const LoginScreen = () => {
         if (!valid) return;
 
         try {
-            const resultAction = await dispatch(loginUser({ phone_no: phone, role }));
+            const selectedRole = roleOptions.find(opt => opt.value === role);
+            const resultAction = await dispatch(loginUser({
+                phone_number: String(phone),
+                role_id: selectedRole?.role_id
+            }));
             const result = resultAction.payload as any;
 
             if (loginUser.fulfilled.match(resultAction)) {
                 if (result.success === 'true' || result.success === true) {
                     console.log('OTP Sent:', result);
-                    navigation.navigate('Otp', { phone, role });
+                    navigation.navigate('Otp', { phone, role, role_id: selectedRole?.role_id });
                 } else {
                     Alert.alert('Login Failed', result.message || result.extraData || 'Verification failed');
                 }
@@ -143,8 +145,8 @@ const styles = StyleSheet.create({
         paddingHorizontal: 24,
     },
     logo: {
-        width: scale(150),
-        height: scale(150),
+        width: scale(170),
+        height: scale(170),
         marginTop: scale(100),
         alignSelf: 'center',
     },

@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, StatusBar, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, StatusBar, RefreshControl, ActivityIndicator, Alert } from 'react-native';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { useDispatch, useSelector } from 'react-redux';
 import { logoutUser } from '../../redux/slices/authSlice';
@@ -7,11 +7,16 @@ import { viewOrders, acceptOrder } from '../../redux/slices/orderSlice';
 import OrderCard from '../../components/OrderCard';
 import { useNavigation } from '@react-navigation/native';
 import { RootState, AppDispatch } from '../../redux/store';
-import { ActivityIndicator, Alert } from 'react-native';
 import { COLORS } from '../../constants/color';
 import OTPModal from '../../components/OTPModal';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const Tab = createMaterialTopTabNavigator();
+// ... (OrderScreen, ApprovedScreen, CancelledScreen implementations remain as is)
+
+
+
+
 
 const OrderScreen = ({ onApprove, onCancel }: { onApprove: (id: string) => void, onCancel: (id: string) => void }) => {
     // Access Redux State for orders
@@ -274,8 +279,9 @@ const HomeScreen = () => {
         dispatch(logoutUser() as any); // Type assertion if needed or update AppDispatch usage
     };
 
+
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
             <View style={styles.header}>
                 <TouchableOpacity style={styles.profileSection} onPress={() => navigation.navigate('Profile')}>
                     <Image
@@ -325,7 +331,7 @@ const HomeScreen = () => {
                 onSubmit={onOtpSubmit}
                 loading={loading}
             />
-        </View>
+        </SafeAreaView>
     );
 };
 

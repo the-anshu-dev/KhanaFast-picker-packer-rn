@@ -43,7 +43,7 @@ const request = async <T>(
 
     const defaultHeaders: any = {
         // 'Content-Type': 'multipart/form-data', // Fetch automatically sets this with boundary when body is FormData
-        ...(token ? { 'Authorization': `${token}` } : {})
+        ...(token ? { 'Authorization': token.startsWith('Bearer ') ? token : `Bearer ${token}` } : {})
     };
 
     if (!data) {

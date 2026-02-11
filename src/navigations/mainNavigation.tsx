@@ -4,7 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import AuthNavigation from './authNavigation';
 import AppNavigation from './appNavigation';
 import SplashScreen from '../screens/CommonScreen/SplashScreen';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../redux/store';
 import { checkAuthState } from '../redux/slices/authSlice';
@@ -25,15 +25,18 @@ const NavigationContent = () => {
 
     return (
         <NavigationContainer>
-            <SafeAreaView style={{ flex: 1 }}>
-                <Stack.Navigator screenOptions={{ headerShown: false }}>
-                    {isAuthenticated ? (
-                        <Stack.Screen name="App" component={AppNavigation} />
-                    ) : (
-                        <Stack.Screen name="Auth" component={AuthNavigation} />
-                    )}
-                </Stack.Navigator>
-            </SafeAreaView>
+            <StatusBar
+                translucent
+                backgroundColor="transparent"
+                barStyle="dark-content"
+            />
+            <Stack.Navigator screenOptions={{ headerShown: false }}>
+                {isAuthenticated ? (
+                    <Stack.Screen name="App" component={AppNavigation} />
+                ) : (
+                    <Stack.Screen name="Auth" component={AuthNavigation} />
+                )}
+            </Stack.Navigator>
         </NavigationContainer>
     );
 };

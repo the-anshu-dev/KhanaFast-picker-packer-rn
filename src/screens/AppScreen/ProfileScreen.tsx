@@ -1,10 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, StatusBar, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../redux/store';
 import { useNavigation } from '@react-navigation/native';
 import { logoutUser } from '../../redux/slices/authSlice';
+import CustomHeader from '../../components/CustomHeader';
 
 const ProfileScreen = () => {
     const navigation = useNavigation();
@@ -55,16 +56,7 @@ const ProfileScreen = () => {
 
     return (
         <SafeAreaView style={styles.container}>
-            <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-
-            {/* Header */}
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <Text style={styles.backButtonText}>← Back</Text>
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>Profile</Text>
-                <View style={{ width: 50 }} />
-            </View>
+            <CustomHeader title="Profile" />
 
             <ScrollView contentContainerStyle={styles.content}>
 
@@ -176,28 +168,6 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-    },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: 16,
-        // paddingVertical: 12,
-        // backgroundColor: '#fff',
-        // borderBottomWidth: 1,
-        // borderBottomColor: '#eee',
-    },
-    backButton: {
-        // padding: 8,
-    },
-    backButtonText: {
-        fontSize: 16,
-        color: '#007AFF',
-    },
-    headerTitle: {
-        fontSize: 18,
-        fontWeight: '600',
-        color: '#333',
     },
     content: {
         padding: 20,

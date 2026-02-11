@@ -21,7 +21,7 @@ const initialState: AuthState = {
 };
 
 export const checkAuthState = createAsyncThunk(
-    'view_delivery_boy_profile',
+    'users/profile',
     async (_, { rejectWithValue }) => {
         try {
             const token = await AsyncStorage.getItem('user_token');
@@ -30,13 +30,12 @@ export const checkAuthState = createAsyncThunk(
             if (token) {
                 // Validate token by calling profile API
                 try {
-                    const response = await https.get<any>('/view_delivery_boy_profile');
+                    const response = await https.get<any>('users/profile');
                     // Check for success (support both formats as seen in other slices)
-                    if (response.status === true || response.success === 'true') {
+                    if (response.status === true || response.success === 'true' || response.success === true) {
                         console.log("Token validated successfully via profile view", response);
                         // Return stored user data or updated profile data if available
-                        const apiUser = response.extraData?.delivery_boy_profile || response.extraData?.profile || response.data || response.extraData;
-                        return { token, user: apiUser || (userDataStr ? JSON.parse(userDataStr) : null) };
+                        return { token, user: response.data || (userDataStr ? JSON.parse(userDataStr) : null) };
                     } else {
                         throw new Error('Token validation failed');
                     }
@@ -59,10 +58,11 @@ export const checkAuthState = createAsyncThunk(
 );
 
 export const loginUser = createAsyncThunk(
-    'users/login',
+    'users/login/{role_id}',
     async (data: any, { rejectWithValue }) => {
         try {
-            const response = await https.post('users/login', data);
+            const { role_id, ...rest } = data;
+            const response = await https.post(`users/login/${role_id}`, rest, { isJSON: true });
             return response;
         } catch (error: any) {
             return rejectWithValue(error.message);
@@ -71,10 +71,11 @@ export const loginUser = createAsyncThunk(
 );
 
 export const verifyOtp = createAsyncThunk(
-    'users/verify-otp',
+    'users/verify-otp/{role_id}',
     async (data: any, { rejectWithValue }) => {
         try {
-            const response = await https.post('users/verify-otp', data, { isJSON: true });
+            const { role_id, ...rest } = data;
+            const response = await https.post(`users/verify-otp/${role_id}`, rest, { isJSON: true });
             return response;
         } catch (error: any) {
             return rejectWithValue(error.message);
@@ -168,23 +169,23 @@ const authSlice = createSlice({
         });
         builder.addCase(verifyOtp.fulfilled, (state, action: PayloadAction<any>) => {
             state.loading = false;
-            if (action.payload.status || action.payload.success === 'true' || action.payload.success === true) {
-                // state.isAuthenticated = true; // Wait for profile check
-                state.user = action.payload.data || { ...action.payload }; // user_id in payload based on user request example
-                state.token = action.payload.token;
+            // Response structure: { success: true, data: { ...userInfo, access_token: "..." }, message: "..." }
+            if (action.payload.success === true || action.payload.success === 'true') {
+                const responseData = action.payload.data;
+                const token = responseData?.access_token;
 
-                // Save to storage
-                AsyncStorage.setItem('user_token', action.payload.token);
-                // Saving entire payload or specific user data. 
-                // Based on user request json: { success, extraData, user_status, user_id, token }
-                const userDataToSave = {
-                    user_id: action.payload.user_id,
-                    user_status: action.payload.user_status
-                };
-                AsyncStorage.setItem('user_data', JSON.stringify(userDataToSave));
+                if (token) {
+                    state.token = token;
+                    state.user = responseData;
+                    state.isAuthenticated = true; // Login successful, user is authenticated
 
+                    AsyncStorage.setItem('user_token', token);
+                    AsyncStorage.setItem('user_data', JSON.stringify(responseData));
+                } else {
+                    state.error = "Token missing in response";
+                }
             } else {
-                state.error = action.payload.message || action.payload.extraData;
+                state.error = action.payload.message || action.payload.extraData || "Login failed";
             }
         });
         builder.addCase(verifyOtp.rejected, (state, action) => {
