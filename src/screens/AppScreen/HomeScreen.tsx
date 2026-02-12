@@ -10,6 +10,7 @@ import { RootState, AppDispatch } from '../../redux/store';
 import { COLORS } from '../../constants/color';
 import OTPModal from '../../components/OTPModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const Tab = createMaterialTopTabNavigator();
 // ... (OrderScreen, ApprovedScreen, CancelledScreen implementations remain as is)
@@ -190,10 +191,41 @@ const HomeScreen = () => {
     const dispatch = useDispatch<AppDispatch>();
     const navigation = useNavigation<any>();
     const { profile, loading } = useSelector((state: RootState) => state.user);
+    const { user } = useSelector((state: RootState) => state.auth);
 
     // OTP Modal State
     const [otpModalVisible, setOtpModalVisible] = React.useState(false);
     const [selectedOrder, setSelectedOrder] = React.useState<{ id: string, status: string, message: string } | null>(null);
+
+    // Get role name from role_id (fallback method)
+    const getRoleName = (roleId: number | string | undefined): string => {
+        if (!roleId) return 'User';
+        const id = typeof roleId === 'string' ? parseInt(roleId) : roleId;
+        switch (id) {
+            case 3:
+                return 'Packer';
+            case 4:
+                return 'Picker';
+            default:
+                return 'User';
+        }
+    };
+
+    // Combine user data from both auth and user state
+    const userData = profile || user;
+
+    // Extract user name - handle both new structure (first_name, last_name) and legacy (name, driver_name)
+    const firstName = userData?.first_name || '';
+    const lastName = userData?.last_name || '';
+    const fullName = firstName && lastName ? `${firstName} ${lastName}` : '';
+    const userName = fullName || userData?.name || userData?.driver_name || 'User';
+
+    // Extract profile picture
+    const userPic = userData?.driver_pic || userData?.profile_pic || 'https://avatar.iran.liara.run/public';
+
+    // Extract role - prioritize role array, fallback to role_id mapping
+    const roleFromArray = userData?.role?.[0]?.name;
+    const userRole = roleFromArray || getRoleName(userData?.role_id || user?.role_id);
 
     React.useEffect(() => {
         dispatch(viewOrders());
@@ -285,15 +317,16 @@ const HomeScreen = () => {
             <View style={styles.header}>
                 <TouchableOpacity style={styles.profileSection} onPress={() => navigation.navigate('Profile')}>
                     <Image
-                        source={{ uri: profile?.driver_pic || 'https://avatar.iran.liara.run/public' }}
+                        source={{ uri: userPic }}
                         style={styles.avatar}
                     />
                     <View>
-                        <Text style={styles.welcomeLabel}>Welcome Back,</Text>
-                        <Text style={styles.welcomeText}>{profile?.name || 'User'}</Text>
+                        <Text style={styles.welcomeText}>{userName}</Text>
+                        <Text style={styles.roleText}>{userRole}</Text>
                     </View>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+                    <Icon name="logout" size={18} color={COLORS.primary} style={styles.logoutIcon} />
                     <Text style={styles.logoutText}>Logout</Text>
                 </TouchableOpacity>
             </View>
@@ -372,13 +405,24 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: COLORS.secondary,
     },
+    roleText: {
+        fontSize: 12,
+        fontWeight: '500',
+        color: COLORS.primary,
+        marginTop: 2,
+    },
     logoutButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
         paddingVertical: 8,
         paddingHorizontal: 16,
         backgroundColor: '#fff0f5', // Light pinkish background
         borderRadius: 20,
         borderWidth: 1,
         borderColor: '#ffe0eb',
+    },
+    logoutIcon: {
+        marginRight: 6,
     },
     logoutText: {
         color: COLORS.primary,

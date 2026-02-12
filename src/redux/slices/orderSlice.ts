@@ -20,10 +20,10 @@ const initialState: OrderState = {
 };
 
 export const viewOrders = createAsyncThunk(
-    'delivery_boy_view_order',
+    'orders',
     async (_, { rejectWithValue }) => {
         try {
-            const response = await https.get('/delivery_boy_view_order');
+            const response = await https.get('orders');
             return response;
         } catch (error: any) {
             return rejectWithValue(error.message);
